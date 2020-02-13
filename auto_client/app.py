@@ -1,45 +1,48 @@
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
-import paramiko
+import settings
+from lib.plugins import get_server_info
 
 def ssh(hostname,cmd):
-
+    import paramiko
 
     # 创建SSH对象
     ssh = paramiko.SSHClient()
     # 允许连接不在know_hosts文件中的主机
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     # 连接服务器
-    ssh.connect(hostname=hostname, port=22, username='root', password='Agqa6631')
+    ssh.connect(hostname=hostname, port=settings.SSH_PORT, username=settings.SSH_USER, password=settings.SSH_PWD)
     # 执行命令
     stdin, stdout, stderr = ssh.exec_command(cmd)
     # 获取命令结果
     result = stdout.read()
     # 关闭连接
     ssh.close()
-    return result
-#
-# def task(host):
-#     server_info = get_server_info(ssh, host)
-#     result = requests.post(
-#         url='http://127.0.0.1:8000/api/get_data/',
-#         json={'host': host, 'info': server_info}
-#     )
-#     print(result)
-#
-# def run():
-#     pool = ThreadPoolExecutor(10)
-#     host_list = [
-#         '192.168.14.39',
-#         # '192.168.14.37',
-#         # '192.168.14.38',
-#     ]
-#     for host in host_list:
-#         pool.submit(task,host)
+    return result.decode('utf-8')
 
+def task(host):
+    server_info = get_server_info(ssh, host)
+    print(server_info)
+    result = requests.post(
+        url=settings.API_URL,
+        json={'host': host, 'info': server_info}
+    )
+    print('我是task')
+    print(result)
+
+def get_server_list():
+    response = requests.get(settings.API_URL)
+    print(response)
+    return response.json()['data']
+def run():
+    host_list = get_server_list()
+    print(host_list)
+    pool = ThreadPoolExecutor(10)
+    for host in host_list:
+        pool.submit(task,host)
+        print('正在执行')
 
 if __name__ == '__main__':
-    data = ssh(hostname = "121.43.187.197", cmd='df -h ')
-    print(data)
+    run()
 
