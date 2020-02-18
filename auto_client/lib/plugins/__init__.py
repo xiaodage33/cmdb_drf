@@ -11,4 +11,5 @@ def get_server_info(ssh,hostname):
         plugin_object =cls()
         info = plugin_object.process(ssh,hostname)
         server_info[key] = info
+    print(server_info)
     return server_info

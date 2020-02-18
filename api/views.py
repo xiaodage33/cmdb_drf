@@ -27,7 +27,6 @@ class ServerView(View):
         server_queryset = models.Server.objects.filter(Q(last_date__lt=today) | Q(last_date__isnull=True)).values_list(
             'hostname')
         server_list = [item[0] for item in server_queryset]
-        print(server_list)
         return JsonResponse({'status': True, 'data': server_list})
 
     def post(self,request,*args,**kwargs):
